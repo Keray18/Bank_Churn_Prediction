@@ -4,6 +4,7 @@ import numpy as np
 from urllib.parse import urlparse
 import mlflow
 import mlflow.sklearn
+import dagshub
 
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
@@ -38,16 +39,23 @@ class ModelTrainer():
             params = {
                 'Logistic Regression': {
                     'penalty': ['l2', None],
-                    'C': [0.001, 0.01, 0.1, 1, 10, 100]
+                    'C': [0.001, 0.01, 0.1, 1, 10, 100],
+                    'solver': ['lbfgs', 'newton-cg'],
+                    # 'max_iter': [100, 200, 300]
                 },
                 'XGBoost Classifier': {
                     'learning_rate': [0.01, 0.1, 0.2, 0.3],
                     'n_estimators': [50, 100, 200, 300],
-                    'max_depth': [3, 5, 7, 9]
+                    'max_depth': [3, 5, 7, 9],
+                    # 'subsample': [0.8, 0.9, 1.0],
+                    # 'colsample_bytree': [0.8, 0.9, 1.0]
                 },
                 'Random Forest Classifier': {
                     'n_estimators': [50, 100, 200, 300],
-                    'max_depth': [None, 10, 20, 30]
+                    'max_depth': [None, 10, 20, 30],
+                    'min_samples_split': [2, 5, 10],
+                    # 'min_samples_leaf': [1, 2, 4],
+
                 }
             }
 
@@ -79,6 +87,7 @@ class ModelTrainer():
             mlflow.set_registry_uri("https://dagshub.com/Keray18/Bank_Churn_Prediction.mlflow")
             tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
 
+            dagshub.init(repo_owner='Keray18', repo_name='Bank_Churn_Prediction', mlflow=True)
             with mlflow.start_run():
                 accuracy, precision, recall, f1 = eval_score(best_model, x_test, y_test)
 

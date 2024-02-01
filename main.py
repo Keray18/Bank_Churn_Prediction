@@ -16,7 +16,7 @@ if __name__=='__main__':
         x_train, x_test, y_train, y_test, _ = data_processing.initiate_data_processing(train_data_path, test_data_path)
 
         model_trainer = ModelTrainer()
-        model_trainer.initiate_model_training(x_train, x_test, y_train, y_test)
+        print(model_trainer.initiate_model_training(x_train, x_test, y_train, y_test))
 
     except Exception as e:
         raise CustomException(e,sys)

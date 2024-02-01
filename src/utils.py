@@ -26,13 +26,11 @@ def eval_score(model, x_test, y_test):
     try:
         y_pred = model.predict(x_test)
 
-        dict={
-            "accuracy": accuracy_score(y_test, y_pred),
-            "precision": precision_score(y_test, y_pred),
-            "recall": recall_score(y_test, y_pred),
-            "f1": f1_score(y_test, y_pred)
-        }
-        return dict
+        accuracy = accuracy_score(y_test, y_pred)
+        precision = precision_score(y_test, y_pred)
+        recall = recall_score(y_test, y_pred)
+        f1 = f1_score(y_test, y_pred)
+        return accuracy, precision, recall, f1
 
     except Exception as e:
         raise CustomException(e, sys)

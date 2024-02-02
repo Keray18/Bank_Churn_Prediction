@@ -1,25 +1,27 @@
 import os
-import sys   
+import sys
 import numpy as np
 from urllib.parse import urlparse
 import mlflow
 import mlflow.sklearn
 import dagshub
 
+
+from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 
 from src.utils import save_object, model_training, eval_score
-from src.logger import logging  
+from src.logger import logging
 from src.exception import CustomException
-from dataclasses import dataclass 
+from dataclasses import dataclass
 
 
-@dataclass 
+@dataclass
 class ModelTrainerConfig():
-    model_file_path = os.path.join("data/artifact", "model.pkl")
+    model_file_path = os.path.join("data/artifacts", "model.pkl")
 
 
 class ModelTrainer():
@@ -31,52 +33,60 @@ class ModelTrainer():
             logging.info("Initiating model training...")
 
             models = {
-                'Logistic Regression': LogisticRegression(),
-                'XGBoost Classifier': XGBClassifier(),
-                'Random Forest Classifier': RandomForestClassifier()
+                'Logistic_Regression': LogisticRegression(),
+                'XGBoost_Classifier': XGBClassifier(),
+                'Random_Forest_Classifier': RandomForestClassifier(),
+                'SVC': SVC()
             }
 
             params = {
-                'Logistic Regression': {
+                'SVC': {
+                    'C': [0.1, 1, 10],
+                    'kernel': ['linear', 'rbf', 'poly'],
+                    # 'gamma': ['scale', 'auto']
+                },
+                'Logistic_Regression': {
                     'penalty': ['l2', None],
                     'C': [0.001, 0.01, 0.1, 1, 10, 100],
-                    'solver': ['lbfgs', 'newton-cg'],
+                    # 'solver': ['lbfgs', 'newton-cg'],
                     # 'max_iter': [100, 200, 300]
                 },
-                'XGBoost Classifier': {
+                'XGBoost_Classifier': {
                     'learning_rate': [0.01, 0.1, 0.2, 0.3],
                     'n_estimators': [50, 100, 200, 300],
-                    'max_depth': [3, 5, 7, 9],
+                    # 'max_depth': [3, 5, 7, 9],
                     # 'subsample': [0.8, 0.9, 1.0],
                     # 'colsample_bytree': [0.8, 0.9, 1.0]
                 },
-                'Random Forest Classifier': {
+                'Random_Forest_Classifier': {
                     'n_estimators': [50, 100, 200, 300],
                     'max_depth': [None, 10, 20, 30],
-                    'min_samples_split': [2, 5, 10],
+                    # 'min_samples_split': [2, 5, 10],
                     # 'min_samples_leaf': [1, 2, 4],
 
                 }
             }
 
-            report: dict = model_training(models, x_train, y_train, x_test, y_test, params)
+            report: dict = model_training(
+                models, x_train, y_train, x_test, y_test, params)
 
             # Getting best model name.
             best_score = max(sorted(report.values()))
             print(f"best_score: {best_score}")
-            
+
             best_model_name = list(report.keys())[
                 list(report.values()).index(best_score)
             ]
             print(f"best_model_name: {best_model_name}")
 
             # Getting the best model.
-            best_model = models[best_model_name] 
+            best_model = models[best_model_name]
             logging.info(f"Best model found")
-            print(f"Best model is: {best_model_name} with accuracy: {best_score}")
+            print(
+                f"Best model is: {best_model_name} with accuracy: {best_score}")
 
             model_names = list(params.keys())
-            actual_model=""
+            actual_model = ""
 
             for model in model_names:
                 if best_model_name == model:
@@ -84,12 +94,16 @@ class ModelTrainer():
 
             best_params = params[actual_model]
 
-            mlflow.set_registry_uri("https://dagshub.com/Keray18/Bank_Churn_Prediction.mlflow")
-            tracking_url_type_store = urlparse(mlflow.get_tracking_uri()).scheme
+            mlflow.set_registry_uri(
+                "https://dagshub.com/Keray18/Bank_Churn_Prediction.mlflow")
+            tracking_url_type_store = urlparse(
+                mlflow.get_tracking_uri()).scheme
 
-            dagshub.init(repo_owner='Keray18', repo_name='Bank_Churn_Prediction', mlflow=True)
+            dagshub.init(repo_owner='Keray18',
+                         repo_name='Bank_Churn_Prediction', mlflow=True)
             with mlflow.start_run():
-                accuracy, precision, recall, f1 = eval_score(best_model, x_test, y_test)
+                accuracy, precision, recall, f1 = eval_score(
+                    best_model, x_test, y_test)
 
                 mlflow.log_params(best_params)
 
@@ -99,28 +113,28 @@ class ModelTrainer():
                 mlflow.log_metric("f1", f1)
 
                 if tracking_url_type_store != "file":
-                    mlflow.sklearn.log_model(best_model, "model", registered_model_name=actual_model)
-                
+                    mlflow.sklearn.log_model(
+                        best_model, "model", registered_model_name=actual_model)
+
                 else:
                     mlflow.sklearn.log_model(best_model, "model")
 
-                if best_score<0.6:
+                if best_score < 0.6:
                     raise CustomException("No best model found")
-                logging.info(f"Best found model on both training and testing dataset")
+                logging.info(
+                    f"Best found model on both training and testing dataset")
 
                 # print(f"evalScore of the best model: {evalScore}")
-            save_object (
-                file_path = self.model_trainer_config.model_file_path,
-                obj = best_model
+
+            save_object(
+                file_path=self.model_trainer_config.model_file_path,
+                obj=best_model
             )
 
-            preds=best_model.predict(x_test)
+            preds = best_model.predict(x_test)
 
             accuracy = accuracy_score(y_test, preds)
             return accuracy
 
-
-
-
         except Exception as e:
-            raise CustomException(e,sys)
+            raise CustomException(e, sys)

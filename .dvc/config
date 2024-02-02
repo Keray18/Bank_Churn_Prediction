@@ -1,0 +1,7 @@
+[core]
+    remote = myremote
+['remote "myremote"']
+    url = s3://dvc
+['remote "origin"']
+    url = s3://dvc
+    endpointurl = https://dagshub.com/Keray18/Bank_Churn_Prediction.s3

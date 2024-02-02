@@ -1,6 +1,6 @@
 import os
 import sys
-import pickle 
+import pickle
 
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.model_selection import GridSearchCV
@@ -34,22 +34,21 @@ def eval_score(model, x_test, y_test):
 
     except Exception as e:
         raise CustomException(e, sys)
-  
 
 
 def model_training(models, x_train, y_train, x_test, y_test, params):
     try:
         report = {}
-    
+
         for i in range(len(list(models))):
             model = list(models.values())[i]
-            para=params[list(models.keys())[i]]
+            para = params[list(models.keys())[i]]
 
-            gs = GridSearchCV(model,para,cv=3)
-            gs.fit(x_train,y_train)
+            gs = GridSearchCV(model, para, cv=3)
+            gs.fit(x_train, y_train)
 
             model.set_params(**gs.best_params_)
-            model.fit(x_train,y_train)
+            model.fit(x_train, y_train)
 
             preds = model.predict(x_test)
             accuracy = accuracy_score(y_test, preds)
@@ -62,6 +61,28 @@ def model_training(models, x_train, y_train, x_test, y_test, params):
         raise CustomException(e, sys)
 
 
+def load_object(file_path):
+    try:
+        with open(file_path, "rb") as file_obj:
+            return pickle.load(file_obj)
+
+    except Exception as e:
+        raise CustomException(e, sys)
 
 
+def get_data_as_data_frame(self, data):
+    try:
+        custom_data_input_dict = {
+            "gender": [self.gender],
+            "race_ethnicity": [self.race_ethnicity],
+            "parental_level_of_education": [self.parental_level_of_education],
+            "lunch": [self.lunch],
+            "test_preparation_course": [self.test_preparation_course],
+            "reading_score": [self.reading_score],
+            "writing_score": [self.writing_score],
+        }
 
+        return pd.DataFrame(custom_data_input_dict)
+
+    except Exception as e:
+        raise CustomException(e, sys)

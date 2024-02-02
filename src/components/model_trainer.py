@@ -8,6 +8,7 @@ import dagshub
 
 
 from sklearn.svm import SVC
+from sklearn.linear_model import SGDClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -36,14 +37,15 @@ class ModelTrainer():
                 'Logistic_Regression': LogisticRegression(),
                 'XGBoost_Classifier': XGBClassifier(),
                 'Random_Forest_Classifier': RandomForestClassifier(),
-                'SVC': SVC()
+                'SVC': SVC(),
+                'sgd_classifier': SGDClassifier()
             }
 
             params = {
                 'SVC': {
                     'C': [0.1, 1, 10],
-                    'kernel': ['linear', 'rbf', 'poly'],
-                    # 'gamma': ['scale', 'auto']
+                    # 'kernel': ['linear', 'rbf', 'poly'],
+                    'gamma': ['scale', 'auto']
                 },
                 'Logistic_Regression': {
                     'penalty': ['l2', None],
@@ -64,6 +66,10 @@ class ModelTrainer():
                     # 'min_samples_split': [2, 5, 10],
                     # 'min_samples_leaf': [1, 2, 4],
 
+                },
+                'sgd_classifier': {
+                    'alpha': [0.0001, 0.001, 0.01, 0.1],
+                    'learning_rate': ['constant', 'optimal', 'invscaling', 'adaptive']
                 }
             }
 
